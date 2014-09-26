@@ -1,0 +1,52 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# TODO: Change username to aronb
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
+   #config.vm.box = "hashicorp/precise64"
+   config.vm.box = "ubuntu/trusty64"
+   config.vm.provision "docker"
+   config.vm.provision :shell, inline: 'apt-get update && apt-get install -y subversion vim'
+#   config.vm.provision "shell", inline:
+#     "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
+
+   config.ssh.forward_agent = true
+
+   # Configuration for Virtualbox provider
+   config.vm.provider :virtualbox do |vb|
+      vb.name = "host_vm"
+      # Memory
+      vb.customize [ "modifyvm", :id, "--memory", "8192" ]
+      # Chipset (Supposedly better CPU performance)
+      #vb.customize [ "modifyvm", :id, "--chipset", "ich9" ]
+      # NIC 1 (Better TCP over NAT performance, at least on Windows)
+      #vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+      #vb.customize ["modifyvm", :id, "--natsettings1", "9000,1024,1024,1024,1024"]
+      # NIC 2 (Host Only Access)
+      #vb.customize ["modifyvm", :id, "--nictype2", "virtio"]
+      #vb.customize ["modifyvm", :id, "--hostonlyadapter2", "VirtualBox Host-Only Ethernet Adapter"]
+
+      # Could make this optional.
+      #if ENV["VBOX_VM_PATH"]
+
+      # Add Second Drive
+      file_to_disk = 'D:\VirtualBox VMs\deps.vdi'
+      unless File.exist?(file_to_disk)
+         vb.customize ['createhd', '--filename', file_to_disk, '--size', 500 * 1024]
+      end
+      vb.customize ['storageattach', :id, '--storagectl', 'SATAController', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', file_to_disk]
+
+      # XXX: Is this needed.
+      #vb.customize ["storagectl", :id, "--name", "SATA", "--sataportcount", 2, "--hostiocache", "on"]
+      #vb.customize ["storageattach", :id,  "--storagectl", "SATA", "--port", 1, "--device", 0,  "--type", "hdd", "--medium", disk2_path]
+   end
+
+
+   config.vm.network :forwarded_port, guest: 6379, host: 6379
+   config.vm.network :forwarded_port, guest: 5222, host: 5222
+#   config.vm.network :forwarded_port, guest: 5432, host: 15432
+#   config.vm.network :forwarded_port, guest: 9200, host: 9200
+end
