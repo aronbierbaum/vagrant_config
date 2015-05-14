@@ -1,0 +1,68 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
+   config.vm.provider :virtualbox do |prov|
+      config.vm.box = "chef/centos-6.6"
+      prov.name = "aronb_dev_vm"
+   end
+
+   config.vm.provider :parallels do |prov|
+      config.vm.box = "parallels/centos-6.6"
+      prov.name = "aronb_dev_vm"
+      prov.update_guest_tools = true
+   end
+
+   # Ubuntu
+   #config.vm.provision :shell, inline: 'apt-get update && apt-get install -y subversion vim'
+
+   # CentOS
+   config.vm.provision :shell, inline: 'yum install -y subversion vim git python-argparse'
+
+   # XXX: How do we only do this if the user doesn't exist.
+   #config.vm.provision :shell, inline: 'useradd -m -s /bin/bash -U aronb'
+   #config.vm.provision :shell, inline: "echo '%aronb ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/aronb"
+   #config.vm.provision :shell, inline: 'chmod 440 /etc/sudoers.d/aronb'
+
+   # TODO: docker login quay.io
+   #docker login --username="aronbierbaum" --email="aronbierbam@gmail.com"
+
+   # TODO: Common git settings
+   config.vm.provision :shell, inline: 'git config --global push.default upstream'
+   config.vm.provision :shell, inline: 'git config --global branch.autosetuprebase always'
+   config.vm.provision :shell, inline: 'git config --global user.name "Aron Bierbaum"'
+   config.vm.provision :shell, inline: 'git config --global user.email "aronbierbaum@gmail.com"'
+   config.vm.provision :shell, inline: 'git config --global alias.co "checkout"'
+   config.vm.provision :shell, inline: 'git config --global alias.puller "pull --rebase"'
+   config.vm.provision :shell, inline: 'git config --global alias.showlocal "log --branches --not --remotes --simplify-by-decoration --decorate --oneline"'
+   config.vm.provision :shell, inline: "git config --global alias.find '!git ls-files | grep -i'"
+
+   # TODO: Setup the source directory
+   # mkdir -p Source/p5
+   # cd Source/p5/
+   # git clone git@github.com:priority5/taccs.git
+
+   # TODO: Set the username to use for SSH for certain servers.
+   # /home/vagrant/.ssh/ssh_config
+   # Host example.com
+   # User jdoe
+
+   config.vm.provision "docker"
+   config.vm.synced_folder "deploy/", "/home/vagrant/deploy"
+
+   config.ssh.forward_agent = true
+
+   # Redis, ejabberd and PostgreSQL
+   config.vm.network :forwarded_port, guest: 6379, host: 6379
+   config.vm.network :forwarded_port, guest: 5222, host: 5222
+   config.vm.network :forwarded_port, guest: 5432, host: 5432
+
+   # UnitySM
+   config.vm.network :forwarded_port, guest: 11140, host: 11140
+   config.vm.network :forwarded_port, guest: 11141, host: 11141
+   config.vm.network :forwarded_port, guest: 11142, host: 11142
+   config.vm.network :forwarded_port, guest: 11143, host: 11143
+   config.vm.network :forwarded_port, guest: 11144, host: 11144
+end
