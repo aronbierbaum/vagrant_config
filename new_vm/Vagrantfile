@@ -6,13 +6,22 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
-   config.vm.box = "chef/centos-6.6"
-   #config.vm.box = "ubuntu/trusty64"
    config.vm.hostname = "aronb-dev-vm"
-   config.vm.provision "docker"
+
+   config.vm.provider :virtualbox do |prov|
+      config.vm.box = "chef/centos-6.6"
+      prov.name = "aronb-dev-vm"
+      prov.update_guest_tools = true
+   end
+
+   config.vm.provider :parallels do |prov|
+      config.vm.box = "parallels/centos-6.6"
+      prov.name = "aronb-dev-vm"
+      prov.update_guest_tools = true
+   end
 
    # CentOS
-   config.vm.provision :shell, inline: 'yum install -y subversion vim git'
+   config.vm.provision :shell, inline: 'yum install -y subversion vim git python-argparse'
    # Ubuntu
    #config.vm.provision :shell, inline: 'apt-get update && apt-get install -y subversion vim git'
 
@@ -20,6 +29,38 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 #     "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
 
    config.ssh.forward_agent = true
+
+   config.vm.provision "docker"
+
+   # XXX: How do we only do this if the user doesn't exist.
+   #config.vm.provision :shell, inline: 'useradd -m -s /bin/bash -U aronb'
+   #config.vm.provision :shell, inline: "echo '%aronb ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/aronb"
+   #config.vm.provision :shell, inline: 'chmod 440 /etc/sudoers.d/aronb'
+
+   # TODO: docker login quay.io
+   #docker login --username="aronbierbaum" --email="aronbierbam@gmail.com"
+
+   # TODO: Common git settings
+   config.vm.provision :shell, inline: 'git config --global push.default upstream'
+   config.vm.provision :shell, inline: 'git config --global branch.autosetuprebase always'
+   config.vm.provision :shell, inline: 'git config --global user.name "Aron Bierbaum"'
+   config.vm.provision :shell, inline: 'git config --global user.email "aronbierbaum@gmail.com"'
+   config.vm.provision :shell, inline: 'git config --global alias.co "checkout"'
+   config.vm.provision :shell, inline: 'git config --global alias.puller "pull --rebase"'
+   config.vm.provision :shell, inline: 'git config --global alias.showlocal "log --branches --not --remotes --simplify-by-decoration --decorate --oneline"'
+   config.vm.provision :shell, inline: "git config --global alias.find '!git ls-files | grep -i'"
+
+   # TODO: Setup the source directory
+   # mkdir -p Source/p5
+   # cd Source/p5/
+   # git clone git@github.com:priority5/taccs.git
+
+   # TODO: Set the username to use for SSH for certain servers.
+   # /home/vagrant/.ssh/ssh_config
+   # Host example.com
+   # User jdoe
+
+   #config.vm.synced_folder "deploy/", "/home/vagrant/deploy"
 
    # Configuration for Virtualbox provider
    config.vm.provider :virtualbox do |vb|
@@ -53,13 +94,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       # XXX: Is this needed.
       #vb.customize ["storagectl", :id, "--name", "SATA", "--sataportcount", 2, "--hostiocache", "on"]
       #vb.customize ["storageattach", :id,  "--storagectl", "SATA", "--port", 1, "--device", 0,  "--type", "hdd", "--medium", disk2_path]
+
+      config.vm.network "public_network", :send_hostname_in_dhcp_request => true
    end
 
+   # Redis, ejabberd and PostgreSQL
+   #config.vm.network :forwarded_port, guest: 6379, host: 6379
+   #config.vm.network :forwarded_port, guest: 5222, host: 5222
+   #config.vm.network :forwarded_port, guest: 5432, host: 5432
 
-   #config.vm.network "private_network", type: "dhcp"
-   config.vm.network "public_network", :send_hostname_in_dhcp_request => true
-#   config.vm.network :forwarded_port, guest: 6379, host: 6379
-#   config.vm.network :forwarded_port, guest: 5222, host: 5222
-#   config.vm.network :forwarded_port, guest: 5432, host: 15432
-#   config.vm.network :forwarded_port, guest: 9200, host: 9200
+   # UnitySM
+   #config.vm.network :forwarded_port, guest: 11140, host: 11140
+   #config.vm.network :forwarded_port, guest: 11141, host: 11141
+   #config.vm.network :forwarded_port, guest: 11142, host: 11142
+   #config.vm.network :forwarded_port, guest: 11143, host: 11143
+   #config.vm.network :forwarded_port, guest: 11144, host: 11144
 end
