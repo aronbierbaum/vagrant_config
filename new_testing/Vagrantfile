@@ -6,19 +6,19 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|  
-   config.vm.hostname = "aronb-dev-vm"
+   config.vm.hostname = "aronb-dev-vm2"
 
    config.vm.provider :virtualbox do |prov|
       #config.vm.box = "chef/centos-6.6"
       config.vm.box = "boxcutter/boxes/centos71"
-      prov.name = "aronb-dev-vm"
+      prov.name = "aronb-dev-vm2"
       prov.update_guest_tools = true
    end
 
    config.vm.provider :parallels do |prov|
       #config.vm.box = "parallels/centos-6.6"
       config.vm.box = "parallels/centos-7.1"
-      prov.name = "aronb-dev-vm"
+      prov.name = "aronb-dev-vm2"
       prov.update_guest_tools = true
    end
 
@@ -78,11 +78,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
    # Host example.com
    # User jdoe
 
-   #config.vm.synced_folder "deploy/", "/home/vagrant/deploy"
+   config.vm.synced_folder "package/", "/home/vagrant/package"
 
    # Configuration for Virtualbox provider
    config.vm.provider :virtualbox do |vb|
-      vb.name = "aronb-dev-vm"
+      vb.name = "aronb-dev-vm2"
 
       # Memory
       vb.customize [ "modifyvm", :id, "--memory", "8192" ]
